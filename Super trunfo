@@ -1,0 +1,163 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <time.h>
+
+// Estrutura que representa uma carta no jogo
+typedef struct {
+    char estado[30];               // Nome do estado da cidade
+    int codigo;                    // Código identificador da cidade
+    char nome[30];                 // Nome da cidade
+    int populacao;                 // População total da cidade
+    float pib;                     // Produto Interno Bruto (PIB) da cidade
+    float area;                    // Área total da cidade em km²
+    int pontos_turisticos;         // Quantidade de pontos turísticos na cidade
+    float densidade_populacional;  // Densidade populacional (calculada automaticamente)
+    float pib_per_capita;          // PIB per capita (calculado automaticamente)
+} Carta;
+
+// Função que calcula informações adicionais da carta, como densidade populacional e PIB per capita
+void calcularPropriedadesDerivadas(Carta *carta) {
+    carta->densidade_populacional = (float)carta->populacao / carta->area; // Densidade = população / área
+    carta->pib_per_capita = carta->pib / carta->populacao;                // PIB per capita = PIB / população
+}
+
+// Função para registrar os dados de uma carta
+void registrarCarta(Carta *carta, const char *estado, int codigo, const char *nome, int populacao, float pib, float area, int pontos_turisticos) {
+    strcpy(carta->estado, estado);        // Define o estado da cidade
+    carta->codigo = codigo;              // Define o código da cidade
+    strcpy(carta->nome, nome);           // Define o nome da cidade
+    carta->populacao = populacao;        // Define a população da cidade
+    carta->pib = pib;                    // Define o PIB da cidade
+    carta->area = area;                  // Define a área da cidade
+    carta->pontos_turisticos = pontos_turisticos; // Define o número de pontos turísticos
+
+    calcularPropriedadesDerivadas(carta); // Calcula as propriedades derivadas automaticamente
+}
+
+// Função para exibir as informações de uma carta
+void exibirCarta(Carta carta) {
+    printf("\nCarta:\n");
+    printf("Estado: %s\n", carta.estado);
+    printf("Código: %d\n", carta.codigo);
+    printf("Nome: %s\n", carta.nome);
+    printf("População: %d\n", carta.populacao);
+    printf("PIB: %.2f\n", carta.pib);
+    printf("Área: %.2f km²\n", carta.area);
+    printf("Pontos turísticos: %d\n", carta.pontos_turisticos);
+    printf("Densidade populacional: %.2f hab/km²\n", carta.densidade_populacional);
+    printf("PIB per capita: %.2f\n", carta.pib_per_capita);
+}
+
+// Função que compara duas cartas com base em um atributo escolhido pelo jogador
+void compararCartas(Carta jogador, Carta oponente) {
+    int escolha;
+
+    // Exibe as cartas do jogador e do oponente
+    printf("\nSua carta:");
+    exibirCarta(jogador);
+
+    printf("\nCarta do oponente:");
+    exibirCarta(oponente);
+
+    // Menu para o jogador escolher qual atributo deseja comparar
+    printf("\nEscolha o atributo para comparar:\n");
+    printf("1. População\n");
+    printf("2. PIB\n");
+    printf("3. Área\n");
+    printf("4. Densidade populacional\n");
+    printf("5. PIB per capita\n");
+    printf("6. Pontos turísticos\n");
+    printf("Digite sua escolha: ");
+    scanf("%d", &escolha);
+
+    // Realiza a comparação com base no atributo escolhido
+    switch (escolha) {
+        case 1: // Comparação por população
+            if (jogador.populacao > oponente.populacao)
+                printf("%s vence com maior população!\n", jogador.nome);
+            else if (jogador.populacao < oponente.populacao)
+                printf("%s vence com maior população!\n", oponente.nome);
+            else
+                printf("Empate na população!\n");
+            break;
+        case 2: // Comparação por PIB
+            if (jogador.pib > oponente.pib)
+                printf("%s vence com maior PIB!\n", jogador.nome);
+            else if (jogador.pib < oponente.pib)
+                printf("%s vence com maior PIB!\n", oponente.nome);
+            else
+                printf("Empate no PIB!\n");
+            break;
+        case 3: // Comparação por área
+            if (jogador.area > oponente.area)
+                printf("%s vence com maior área!\n", jogador.nome);
+            else if (jogador.area < oponente.area)
+                printf("%s vence com maior área!\n", oponente.nome);
+            else
+                printf("Empate na área!\n");
+            break;
+        case 4: // Comparação por densidade populacional
+            if (jogador.densidade_populacional > oponente.densidade_populacional)
+                printf("%s vence com maior densidade populacional!\n", jogador.nome);
+            else if (jogador.densidade_populacional < oponente.densidade_populacional)
+                printf("%s vence com maior densidade populacional!\n", oponente.nome);
+            else
+                printf("Empate na densidade populacional!\n");
+            break;
+        case 5: // Comparação por PIB per capita
+            if (jogador.pib_per_capita > oponente.pib_per_capita)
+                printf("%s vence com maior PIB per capita!\n", jogador.nome);
+            else if (jogador.pib_per_capita < oponente.pib_per_capita)
+                printf("%s vence com maior PIB per capita!\n", oponente.nome);
+            else
+                printf("Empate no PIB per capita!\n");
+            break;
+        case 6: // Comparação por pontos turísticos
+            if (jogador.pontos_turisticos > oponente.pontos_turisticos)
+                printf("%s vence com mais pontos turísticos!\n", jogador.nome);
+            else if (jogador.pontos_turisticos < oponente.pontos_turisticos)
+                printf("%s vence com mais pontos turísticos!\n", oponente.nome);
+            else
+                printf("Empate nos pontos turísticos!\n");
+            break;
+        default: // Caso o jogador escolha uma opção inválida
+            printf("Escolha inválida.\n");
+            break;
+    }
+}
+
+int main() {
+    Carta cartas[10]; // Array para armazenar as cartas
+
+    // Inicializa o gerador de números aleatórios
+    srand(time(NULL));
+
+    // Registro das cartas com dados fictícios
+    registrarCarta(&cartas[0], "São Paulo", 11, "São Paulo", 12325232, 699000000.00, 1521.11, 100);
+    registrarCarta(&cartas[1], "Rio de Janeiro", 21, "Rio de Janeiro", 6748000, 40000000.00, 1200.278, 50);
+    registrarCarta(&cartas[2], "Minas Gerais", 31, "Belo Horizonte", 2521564, 15000000.00, 331.401, 30);
+    registrarCarta(&cartas[3], "Bahia", 71, "Salvador", 2886698, 12000000.00, 693.453, 20);
+    registrarCarta(&cartas[4], "Paraná", 41, "Curitiba", 1963726, 18000000.00, 435.036, 25);
+    registrarCarta(&cartas[5], "Pernambuco", 81, "Recife", 1653461, 9000000.00, 218.435, 15);
+    registrarCarta(&cartas[6], "Ceará", 85, "Fortaleza", 2686612, 12000000.00, 313.140, 18);
+    registrarCarta(&cartas[7], "Amazonas", 92, "Manaus", 2219580, 15000000.00, 11401.092, 12);
+    registrarCarta(&cartas[8], "Rio Grande do Sul", 51, "Porto Alegre", 1484941, 8000000.00, 496.682, 22);
+    registrarCarta(&cartas[9], "Distrito Federal", 61, "Brasília", 3055149, 25600000.00, 5802.00, 35);
+
+    // Seleção de duas cartas aleatórias
+    int carta1 = rand() % 10; // Seleciona a primeira carta
+    int carta2;
+    do {
+        carta2 = rand() % 10; // Seleciona a segunda carta
+    } while (carta1 == carta2); // Garante que as duas cartas sejam diferentes
+
+    // Comparação de duas cartas
+    printf("\nComparação entre duas cartas aleatórias:\n");
+    compararCartas(cartas[carta1], cartas[carta2]);
+
+    // Finaliza o programa
+    printf("\nFim do jogo. Obrigado por jogar!\n");
+
+    return 0;
+}
