@@ -1,0 +1,219 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
+
+#define TAMANHO_TABULEIRO 8
+
+// Exibe o tabuleiro com as peças do jogador (P) e do oponente (O)
+void exibirTabuleiro(char tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]) {
+    printf("\nTabuleiro:\n   ");
+    for (int j = 0; j < TAMANHO_TABULEIRO; j++)
+        printf("%d ", j);
+    printf("\n");
+    for (int i = 0; i < TAMANHO_TABULEIRO; i++) {
+        printf("%d  ", i);
+        for (int j = 0; j < TAMANHO_TABULEIRO; j++) {
+            printf("%c ", tabuleiro[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+// Inicializa o tabuleiro com '.'
+void inicializarTabuleiro(char tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]) {
+    for (int i = 0; i < TAMANHO_TABULEIRO; i++)
+        for (int j = 0; j < TAMANHO_TABULEIRO; j++)
+            tabuleiro[i][j] = '.';
+}
+
+// Verifica se a posição está dentro do tabuleiro
+bool posicaoValida(int x, int y) {
+    return x >= 0 && x < TAMANHO_TABULEIRO && y >= 0 && y < TAMANHO_TABULEIRO;
+}
+
+// Marca movimentos da torre e retorna quantos movimentos possíveis existem
+int moverTorre(char tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int x, int y, char marca) {
+    int movimentos = 0;
+    for (int i = 0; i < TAMANHO_TABULEIRO; i++)
+        if (i != x && tabuleiro[i][y] == '.') { tabuleiro[i][y] = marca; movimentos++; }
+    for (int j = 0; j < TAMANHO_TABULEIRO; j++)
+        if (j != y && tabuleiro[x][j] == '.') { tabuleiro[x][j] = marca; movimentos++; }
+    return movimentos;
+}
+
+// Marca movimentos do bispo e retorna quantos movimentos possíveis existem
+int moverBispo(char tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int x, int y, char marca) {
+    int movimentos = 0;
+    for (int i = 1; i < TAMANHO_TABULEIRO; i++) {
+        if (posicaoValida(x + i, y + i) && tabuleiro[x + i][y + i] == '.') { tabuleiro[x + i][y + i] = marca; movimentos++; }
+        if (posicaoValida(x - i, y - i) && tabuleiro[x - i][y - i] == '.') { tabuleiro[x - i][y - i] = marca; movimentos++; }
+        if (posicaoValida(x + i, y - i) && tabuleiro[x + i][y - i] == '.') { tabuleiro[x + i][y - i] = marca; movimentos++; }
+        if (posicaoValida(x - i, y + i) && tabuleiro[x - i][y + i] == '.') { tabuleiro[x - i][y + i] = marca; movimentos++; }
+    }
+    return movimentos;
+}
+
+// Marca movimentos da rainha e retorna quantos movimentos possíveis existem
+int moverRainha(char tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int x, int y, char marca) {
+    int movimentos = 0;
+    movimentos += moverTorre(tabuleiro, x, y, marca);
+    movimentos += moverBispo(tabuleiro, x, y, marca);
+    return movimentos;
+}
+
+// Marca movimentos do cavalo e retorna quantos movimentos possíveis existem
+int moverCavalo(char tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int x, int y, char marca) {
+    int movimentos[8][2] = {
+        {-2, -1}, {-2, 1}, {2, -1}, {2, 1},
+        {-1, -2}, {-1, 2}, {1, -2}, {1, 2}
+    };
+    int count = 0;
+    for (int i = 0; i < 8; i++) {
+        int nx = x + movimentos[i][0];
+        int ny = y + movimentos[i][1];
+        if (posicaoValida(nx, ny) && tabuleiro[nx][ny] == '.') {
+            tabuleiro[nx][ny] = marca;
+            count++;
+        }
+    }
+    return count;
+}
+
+// Movimento aleatório do oponente, só realiza se houver movimentos possíveis
+int jogadaOponente(char tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int ox, int oy) {
+    int ordem[4] = {1, 2, 3, 4};
+    // Embaralha a ordem das peças para tentar todas se necessário
+    for (int i = 3; i > 0; i--) {
+        int j = rand() % (i + 1);
+        int tmp = ordem[i];
+        ordem[i] = ordem[j];
+        ordem[j] = tmp;
+    }
+    for (int t = 0; t < 4; t++) {
+        inicializarTabuleiro(tabuleiro);
+        tabuleiro[ox][oy] = 'O';
+        int movimentos = 0;
+        switch (ordem[t]) {
+            case 1:
+                movimentos = moverTorre(tabuleiro, ox, oy, 't');
+                if (movimentos > 0) { printf("Oponente jogou como Torre.\n"); return movimentos; }
+                break;
+            case 2:
+                movimentos = moverBispo(tabuleiro, ox, oy, 'b');
+                if (movimentos > 0) { printf("Oponente jogou como Bispo.\n"); return movimentos; }
+                break;
+            case 3:
+                movimentos = moverRainha(tabuleiro, ox, oy, 'q');
+                if (movimentos > 0) { printf("Oponente jogou como Rainha.\n"); return movimentos; }
+                break;
+            case 4:
+                movimentos = moverCavalo(tabuleiro, ox, oy, 'c');
+                if (movimentos > 0) { printf("Oponente jogou como Cavalo.\n"); return movimentos; }
+                break;
+        }
+    }
+    printf("O oponente não pode se mover a partir da posição atual!\n");
+    return 0;
+}
+
+// Instruções iniciais
+void instrucoes() {
+    printf("Bem-vindo ao simulador de movimentos de xadrez!\n");
+    printf("Você escolhe a posição da sua peça (P).\n");
+    printf("O oponente (O) recebe uma posição aleatória.\n");
+    printf("Escolha a peça para ver seus movimentos possíveis.\n");
+    printf("Depois, veja o movimento aleatório do oponente.\n");
+    printf("O tabuleiro vai de linha 0 a 7 e coluna 0 a 7.\n");
+    printf("T = Torre, B = Bispo, C = Cavalo, Q = Rainha.\n");
+    printf("Letras minúsculas são movimentos do oponente.\n");
+    printf("Pressione ENTER para começar...\n");
+    getchar();
+}
+
+int main() {
+    char tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO];
+    int x, y, ox, oy, escolha;
+    srand(time(NULL));
+
+    instrucoes();
+
+    // Escolha da posição do jogador
+    do {
+        printf("\nEscolha a posição da sua peça (linha coluna): ");
+        scanf("%d %d", &x, &y);
+        if (!posicaoValida(x, y))
+            printf("Posição inválida! Tente novamente.\n");
+    } while (!posicaoValida(x, y));
+
+    // Posição aleatória para oponente, diferente da sua
+    do {
+        ox = rand() % TAMANHO_TABULEIRO;
+        oy = rand() % TAMANHO_TABULEIRO;
+    } while (ox == x && oy == y);
+
+    printf("Oponente está na posição (%d, %d).\n", ox, oy);
+
+    do {
+        printf("\nEscolha a peça para simular o movimento:\n");
+        printf("1. Torre\n");
+        printf("2. Bispo\n");
+        printf("3. Rainha\n");
+        printf("4. Cavalo\n");
+        printf("5. Sair\n");
+        printf("Digite sua escolha: ");
+        scanf("%d", &escolha);
+
+        inicializarTabuleiro(tabuleiro);
+        tabuleiro[x][y] = 'P'; // Sua peça
+        tabuleiro[ox][oy] = 'O'; // Peça do oponente
+
+        int movimentos = 0;
+        switch (escolha) {
+            case 1:
+                movimentos = moverTorre(tabuleiro, x, y, 'T');
+                if (movimentos > 0)
+                    exibirTabuleiro(tabuleiro);
+                else
+                    printf("A Torre não pode se mover a partir desta posição!\n");
+                break;
+            case 2:
+                movimentos = moverBispo(tabuleiro, x, y, 'B');
+                if (movimentos > 0)
+                    exibirTabuleiro(tabuleiro);
+                else
+                    printf("O Bispo não pode se mover a partir desta posição!\n");
+                break;
+            case 3:
+                movimentos = moverRainha(tabuleiro, x, y, 'Q');
+                if (movimentos > 0)
+                    exibirTabuleiro(tabuleiro);
+                else
+                    printf("A Rainha não pode se mover a partir desta posição!\n");
+                break;
+            case 4:
+                movimentos = moverCavalo(tabuleiro, x, y, 'C');
+                if (movimentos > 0)
+                    exibirTabuleiro(tabuleiro);
+                else
+                    printf("O Cavalo não pode se mover a partir desta posição!\n");
+                break;
+            case 5:
+                printf("Encerrando o programa...\n");
+                break;
+            default:
+                printf("Opção inválida! Tente novamente.\n");
+        }
+
+        if (escolha >= 1 && escolha <= 4) {
+            // Mostra jogada do oponente
+            int mov_oponente;
+            mov_oponente = jogadaOponente(tabuleiro, ox, oy);
+            if (mov_oponente > 0)
+                exibirTabuleiro(tabuleiro);
+        }
+
+    } while (escolha != 5);
+
+    return 0;
+}
