@@ -1,0 +1,228 @@
+// Criado pela desenvolvedora Oceanic Games
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
+
+#define TAM 8
+#define QTD_NAVIOS 3
+#define TENTATIVAS_MAX 20
+
+void inicializarTabuleiro(char tabuleiro[TAM][TAM]) {
+    for (int i = 0; i < TAM; i++)
+        for (int j = 0; j < TAM; j++)
+            tabuleiro[i][j] = '.';
+}
+
+void exibirTabuleiro(char tabuleiro[TAM][TAM], bool mostrarNavios) {
+    printf("  ");
+    for (int j = 0; j < TAM; j++) printf("%d ", j);
+    printf("\n");
+    for (int i = 0; i < TAM; i++) {
+        printf("%d ", i);
+        for (int j = 0; j < TAM; j++) {
+            if (!mostrarNavios && tabuleiro[i][j] == 'N')
+                printf(". ");
+            else
+                printf("%c ", tabuleiro[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void posicionarNavios(char tabuleiro[TAM][TAM], int navios[QTD_NAVIOS][2]) {
+    int count = 0;
+    while (count < QTD_NAVIOS) {
+        int x = rand() % TAM;
+        int y = rand() % TAM;
+        if (tabuleiro[x][y] == '.') {
+            tabuleiro[x][y] = 'N';
+            navios[count][0] = x;
+            navios[count][1] = y;
+            count++;
+        }
+    }
+}
+
+bool posicaoValida(int x, int y) {
+    return x >= 0 && x < TAM && y >= 0 && y < TAM;
+}
+
+bool acertouNavio(char tabuleiro[TAM][TAM], int x, int y) {
+    return tabuleiro[x][y] == 'N';
+}
+
+void habilidadeCruz(char tabuleiro[TAM][TAM], int x, int y, int *acertos) {
+    printf("Habilidade especial: Cruz ativada em (%d, %d)!\n", x, y);
+    for (int i = 0; i < TAM; i++) {
+        if (tabuleiro[i][y] == 'N') { tabuleiro[i][y] = 'X'; (*acertos)++; }
+        else if (tabuleiro[i][y] == '.') tabuleiro[i][y] = '*';
+    }
+    for (int j = 0; j < TAM; j++) {
+        if (tabuleiro[x][j] == 'N') { tabuleiro[x][j] = 'X'; (*acertos)++; }
+        else if (tabuleiro[x][j] == '.') tabuleiro[x][j] = '*';
+    }
+}
+
+void habilidadeCone(char tabuleiro[TAM][TAM], int x, int y, int *acertos) {
+    printf("Habilidade especial: Cone ativada em (%d, %d)!\n", x, y);
+    for (int i = 1; i < TAM; i++) {
+        int nx = x + i;
+        if (posicaoValida(nx, y)) {
+            if (tabuleiro[nx][y] == 'N') { tabuleiro[nx][y] = 'X'; (*acertos)++; }
+            else if (tabuleiro[nx][y] == '.') tabuleiro[nx][y] = '*';
+        }
+        if (posicaoValida(nx, y - i)) {
+            if (tabuleiro[nx][y - i] == 'N') { tabuleiro[nx][y - i] = 'X'; (*acertos)++; }
+            else if (tabuleiro[nx][y - i] == '.') tabuleiro[nx][y - i] = '*';
+        }
+        if (posicaoValida(nx, y + i)) {
+            if (tabuleiro[nx][y + i] == 'N') { tabuleiro[nx][y + i] = 'X'; (*acertos)++; }
+            else if (tabuleiro[nx][y + i] == '.') tabuleiro[nx][y + i] = '*';
+        }
+    }
+}
+
+void habilidadeOctaedro(char tabuleiro[TAM][TAM], int x, int y, int *acertos) {
+    printf("Habilidade especial: Octaedro ativada em (%d, %d)!\n", x, y);
+    for (int i = -2; i <= 2; i++) {
+        for (int j = -2; j <= 2; j++) {
+            if (abs(i) + abs(j) <= 2) {
+                int nx = x + i;
+                int ny = y + j;
+                if (posicaoValida(nx, ny)) {
+                    if (tabuleiro[nx][ny] == 'N') { tabuleiro[nx][ny] = 'X'; (*acertos)++; }
+                    else if (tabuleiro[nx][ny] == '.') tabuleiro[nx][ny] = '*';
+                }
+            }
+        }
+    }
+}
+
+bool todosNaviosDestruidos(char tabuleiro[TAM][TAM]) {
+    for (int i = 0; i < TAM; i++)
+        for (int j = 0; j < TAM; j++)
+            if (tabuleiro[i][j] == 'N')
+                return false;
+    return true;
+}
+
+int contarNaviosRestantes(char tabuleiro[TAM][TAM]) {
+    int navios = 0;
+    for (int i = 0; i < TAM; i++)
+        for (int j = 0; j < TAM; j++)
+            if (tabuleiro[i][j] == 'N')
+                navios++;
+    return navios;
+}
+
+void instrucoes() {
+    printf("Criado pela desenvolvedora Oceanic Games\n");
+    printf("Bem-vindo ao Batalha Naval com habilidades especiais!\n");
+    printf("Você deve acertar todos os navios escondidos no tabuleiro %dx%d.\n", TAM, TAM);
+    printf("Você tem %d tentativas para vencer!\n", TENTATIVAS_MAX);
+    printf("Habilidades especiais disponíveis:\n");
+    printf("2. Cruz (atinge linha e coluna, consome 2 tentativas)\n");
+    printf("3. Cone (abaixo e diagonais inferiores, consome 2 tentativas)\n");
+    printf("4. Octaedro (área em losango, consome 3 tentativas)\n");
+    printf("Digite a linha e coluna (0 a %d) para atacar ou usar habilidades.\n", TAM-1);
+    printf("Pressione ENTER para começar...\n");
+    getchar();
+}
+
+int main() {
+    char tabuleiro[TAM][TAM];
+    int navios[QTD_NAVIOS][2];
+    int tentativas = TENTATIVAS_MAX;
+    int escolha, x, y;
+    int acertos = 0;
+
+    srand(time(NULL));
+    inicializarTabuleiro(tabuleiro);
+    posicionarNavios(tabuleiro, navios);
+
+    instrucoes();
+
+    while (!todosNaviosDestruidos(tabuleiro) && tentativas > 0) {
+        exibirTabuleiro(tabuleiro, false);
+        printf("\nNavios restantes: %d | Tentativas restantes: %d\n", contarNaviosRestantes(tabuleiro), tentativas);
+        printf("1. Atacar\n2. Habilidade Cruz\n3. Habilidade Cone\n4. Habilidade Octaedro\n5. Sair\nEscolha: ");
+        scanf("%d", &escolha);
+
+        if (escolha == 5) {
+            printf("Encerrando o jogo...\n");
+            break;
+        }
+
+        printf("Digite a linha e coluna (0 a %d): ", TAM-1);
+        scanf("%d %d", &x, &y);
+
+        if (!posicaoValida(x, y)) {
+            printf("Posição inválida!\n");
+            continue;
+        }
+
+        if (escolha == 1) {
+            if (tabuleiro[x][y] == 'X' || tabuleiro[x][y] == '*') {
+                printf("Você já atacou essa posição.\n");
+                continue;
+            }
+            tentativas--;
+            if (acertouNavio(tabuleiro, x, y)) {
+                printf("Acertou um navio!\n");
+                tabuleiro[x][y] = 'X';
+                acertos++;
+            } else if (tabuleiro[x][y] == '.') {
+                printf("Água!\n");
+                tabuleiro[x][y] = '*';
+            }
+        } else if (escolha == 2) {
+            if (tabuleiro[x][y] == 'X' || tabuleiro[x][y] == '*') {
+                printf("Você já usou habilidade nessa posição.\n");
+                continue;
+            }
+            if (tentativas < 2) {
+                printf("Tentativas insuficientes para usar essa habilidade!\n");
+                continue;
+            }
+            tentativas -= 2;
+            habilidadeCruz(tabuleiro, x, y, &acertos);
+        } else if (escolha == 3) {
+            if (tabuleiro[x][y] == 'X' || tabuleiro[x][y] == '*') {
+                printf("Você já usou habilidade nessa posição.\n");
+                continue;
+            }
+            if (tentativas < 2) {
+                printf("Tentativas insuficientes para usar essa habilidade!\n");
+                continue;
+            }
+            tentativas -= 2;
+            habilidadeCone(tabuleiro, x, y, &acertos);
+        } else if (escolha == 4) {
+            if (tabuleiro[x][y] == 'X' || tabuleiro[x][y] == '*') {
+                printf("Você já usou habilidade nessa posição.\n");
+                continue;
+            }
+            if (tentativas < 3) {
+                printf("Tentativas insuficientes para usar essa habilidade!\n");
+                continue;
+            }
+            tentativas -= 3;
+            habilidadeOctaedro(tabuleiro, x, y, &acertos);
+        } else {
+            printf("Opção inválida!\n");
+        }
+    }
+
+    if (todosNaviosDestruidos(tabuleiro)) {
+        printf("\nParabéns! Todos os navios foram destruídos!\n");
+        exibirTabuleiro(tabuleiro, true);
+        printf("Você venceu com %d tentativas restantes!\n", tentativas);
+    } else if (tentativas == 0) {
+        printf("\nSuas tentativas acabaram! Fim de jogo.\n");
+        exibirTabuleiro(tabuleiro, true);
+    }
+
+    return 0;
+}
