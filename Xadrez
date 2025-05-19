@@ -119,6 +119,7 @@ int jogadaOponente(char tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int ox,
 
 // Instruções iniciais
 void instrucoes() {
+    printf("Criado pela desenvolvedora MateCheck\n");
     printf("Bem-vindo ao simulador de movimentos de xadrez!\n");
     printf("Você escolhe a posição da sua peça (P).\n");
     printf("O oponente (O) recebe uma posição aleatória.\n");
